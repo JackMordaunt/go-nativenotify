@@ -9,6 +9,8 @@ import (
 )
 
 func setup(cfg Config) error {
+	darwinnotify.Init(cfg.Darwin.Categories...)
+
 	darwinnotify.SetCallback(func(args darwinnotify.CallbackArgs) {
 		// Extract the callback id that is prepended to the action id.
 		id, actionName, _ := strings.Cut(args.Action, "-")
