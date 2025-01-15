@@ -36,11 +36,11 @@ func main() {
 		Windows: nativenotify.WindowsConfig{
 			AppID:    "notify-test",
 			GUID:     "{B5E38D62-B912-486C-96E3-6FAD1082B73D}",
-			IconPath: "puzzle.png",
+			IconPath: icon,
 		},
 		Linux: nativenotify.LinuxConfig{
 			AppName: "notify-test",
-			AppIcon: "puzzle.png",
+			AppIcon: icon,
 		},
 		Darwin: nativenotify.DarwinConfig{},
 	}); err != nil {
