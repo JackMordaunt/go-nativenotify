@@ -41,7 +41,7 @@ func setup(cfg Config) error {
 }
 
 func push(n Notification) (err error) {
-	id := nextID.And(1)
+	id := nextID.Add(1)
 
 	defer func() {
 		if err == nil {
