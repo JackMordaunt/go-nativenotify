@@ -43,15 +43,10 @@ func setup(cfg Config) error {
 func push(n Notification) (err error) {
 	id := nextID.Add(1)
 
-	defer func() {
-		if err == nil {
-			callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
-		}
-	}()
-
 	var (
-		buttons = make([]darwinnotify.Action, 0, len(n.ButtonActions))
-		inputs  = make([]darwinnotify.TextInputAction, 0, len(n.TextActions))
+		buttons  = make([]darwinnotify.Action, 0, len(n.ButtonActions))
+		inputs   = make([]darwinnotify.TextInputAction, 0, len(n.TextActions))
+		userData = make(darwinnotify.UserData)
 	)
 
 	for _, button := range n.ButtonActions {
@@ -59,6 +54,9 @@ func push(n Notification) (err error) {
 			ID:    fmt.Sprintf("%d-%s", id, button.ID),
 			Title: button.LabelText,
 		})
+		if button.AppPayload != "" {
+			userData[button.ID] = button.AppPayload
+		}
 	}
 
 	for _, input := range n.TextActions {
@@ -76,6 +74,15 @@ func push(n Notification) (err error) {
 		Attachments:      []string{n.Icon},
 		Actions:          buttons,
 		TextInputActions: inputs,
+		UserData:         userData,
+	})
+
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, userData map[string]string) {
+		if userData == nil {
+			userData = make(map[string]string)
+		}
+		userData["payload"] = n.AppPayload
+		n.Callback(err, id, userData)
 	})
 
 	return nil
