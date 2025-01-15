@@ -16,6 +16,7 @@ func setup(cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("getting dbus session: %w", err)
 	}
+
 	n, err := shout.NewNotifier(
 		conn,
 		cfg.Linux.AppName,
@@ -25,13 +26,25 @@ func setup(cfg Config) error {
 			if !ok || fn == nil {
 				return
 			}
-			fn(err, id, nil)
+			data := make(map[string]string)
+
+			data["action"] = action
+			data["target"] = target.String()
+			data["response"] = response.String()
+
+			for k, v := range platformData {
+				data[k] = v.String()
+			}
+
+			fn(err, id, data)
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("building notifier: %w", err)
 	}
+
 	notifier.Store(&n)
+
 	return nil
 }
 
@@ -43,12 +56,6 @@ func push(n Notification) (err error) {
 	}
 
 	id := nextID.Add(1)
-
-	defer func() {
-		if err == nil {
-			callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
-		}
-	}()
 
 	buttons := []shout.Button{}
 
@@ -74,6 +81,14 @@ func push(n Notification) (err error) {
 	}); err != nil {
 		return fmt.Errorf("sending notification: %w", err)
 	}
+
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, userData map[string]string) {
+		if userData == nil {
+			userData = make(map[string]string)
+		}
+		userData["payload"] = n.AppPayload
+		n.Callback(err, id, userData)
+	})
 
 	return nil
 }
