@@ -50,6 +50,7 @@ func main() {
 	}
 
 	if err := nativenotify.Push(nativenotify.Notification{
+		ID:         "text-message",
 		Title:      title,
 		Body:       body,
 		Icon:       icon,
@@ -66,7 +67,7 @@ func main() {
 			{
 				ID:         "like",
 				LabelText:  "Like",
-				AppPayload: "frodo",
+				AppPayload: "@jack",
 			},
 		},
 		Callback: func(err error, id string, userData map[string]string) {
