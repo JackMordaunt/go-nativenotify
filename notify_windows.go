@@ -1,7 +1,6 @@
 package nativenotify
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -101,22 +100,4 @@ func push(n Notification) (err error) {
 	})
 
 	return tn.Push()
-}
-
-// take returns the first element.
-func take[S ~[]E, E any](s *S) (e E, ok bool) {
-	if len(*s) == 0 {
-		return e, false
-	}
-	defer func() { *s = (*s)[1:] }()
-	return (*s)[0], true
-}
-
-func decode(s string) string {
-	b, _ := hex.DecodeString(s)
-	return string(b)
-}
-
-func encode(s string) string {
-	return hex.EncodeToString([]byte(s))
 }
