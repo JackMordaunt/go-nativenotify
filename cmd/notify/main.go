@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
+	"time"
 
 	"git.sr.ht/~jackmordaunt/go-nativenotify"
 )
@@ -78,5 +80,14 @@ func main() {
 	}
 
 	fmt.Printf("callback invocation will log, quit when done (ctr-c)\n")
-	select {}
+	wait()
+}
+
+func wait() {
+	if runtime.GOOS == "windows" {
+		// Avoid the deadlock panic on Windows.
+		<-time.NewTimer(1<<63 - 1).C
+	} else {
+		select {}
+	}
 }
