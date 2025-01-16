@@ -1,6 +1,8 @@
 package nativenotify
 
 import (
+	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,19 +12,31 @@ import (
 func setup(cfg Config) error {
 	windowsnotify.SetAppData(cfg.Windows)
 	windowsnotify.SetActivationCallback(func(args string, userdata []windowsnotify.UserData) {
-		// Address the fact that the ID might be prepended to some argument
-		// and extract it.
-		id, args, _ := strings.Cut(args, "-")
+		parts := strings.Split(args, "-")
 
-		fn, ok := callbacksTake(&callbacks, id)
-		if !ok || fn == nil {
-			return
-		}
+		id, _ := take(&parts)
+
+		actionIDEncoded, _ := take(&parts)
+		actionArgsEncoded, _ := take(&parts)
+
+		actionID := decode(actionIDEncoded)
+		actionArgs := decode(actionArgsEncoded)
 
 		data := make(map[string]string)
 
 		for _, ud := range userdata {
-			data[ud.Key] = ud.Value
+			if ud.Value != "" {
+				data[ud.Key] = ud.Value
+			}
+		}
+
+		if actionID != "" {
+			data[actionID] = actionArgs
+		}
+
+		fn, ok := callbacksTake(&callbacks, id)
+		if !ok || fn == nil {
+			return
 		}
 
 		fn(nil, args, data)
@@ -30,14 +44,15 @@ func setup(cfg Config) error {
 	return nil
 }
 
+// push the notification.
+//
+// Actions have the notification ID embedded in them so that we can retrieve the
+// correct procedure when actvited by Windows.
+//
+// Action IDs and payloads are hex encoded to escape them and decoded to plaintext
+// when received.
 func push(n Notification) (err error) {
 	id := nextID.Add(1)
-
-	defer func() {
-		if err == nil {
-			callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
-		}
-	}()
 
 	var (
 		actions = make([]windowsnotify.Action, 0, len(n.ButtonActions))
@@ -47,21 +62,21 @@ func push(n Notification) (err error) {
 	for _, a := range n.ButtonActions {
 		actions = append(actions, windowsnotify.Action{
 			Content:   a.LabelText,
-			Arguments: a.AppPayload,
+			Arguments: fmt.Sprintf("%d-%s-%s", id, encode(a.ID), encode(a.AppPayload)),
 		})
 	}
 
 	for _, a := range n.TextActions {
-		actionID := strconv.FormatInt(nextID.Add(1), 10)
 		inputs = append(inputs, windowsnotify.Input{
-			ID:          actionID,
+			ID:          a.ID,
 			Title:       a.Title,
 			Placeholder: a.PlaceholderHint,
 		})
 		if a.ButtonLabel != "" {
 			actions = append(actions, windowsnotify.Action{
-				InputID: actionID,
-				Content: a.ButtonLabel,
+				InputID:   a.ID,
+				Content:   a.ButtonLabel,
+				Arguments: fmt.Sprintf("%d", id),
 			})
 		}
 	}
@@ -71,10 +86,37 @@ func push(n Notification) (err error) {
 		Body:                n.Body,
 		Icon:                n.Icon,
 		ActivationType:      windowsnotify.Foreground,
-		ActivationArguments: strconv.FormatInt(id, 10),
+		ActivationArguments: fmt.Sprintf("%d-%s", id, encode(n.ID)),
 		Actions:             actions,
 		Inputs:              inputs,
 	}
 
+	// This closure ensures that the outer notification ID and payload is always passed to the callback.
+	// The action data will appear in [userData].
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, args string, userData map[string]string) {
+		if n.AppPayload != "" {
+			userData["payload"] = n.AppPayload
+		}
+		n.Callback(err, n.ID, userData)
+	})
+
 	return tn.Push()
+}
+
+// take returns the first element.
+func take[S ~[]E, E any](s *S) (e E, ok bool) {
+	if len(*s) == 0 {
+		return e, false
+	}
+	defer func() { *s = (*s)[1:] }()
+	return (*s)[0], true
+}
+
+func decode(s string) string {
+	b, _ := hex.DecodeString(s)
+	return string(b)
+}
+
+func encode(s string) string {
+	return hex.EncodeToString([]byte(s))
 }
