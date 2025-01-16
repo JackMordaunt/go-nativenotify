@@ -61,7 +61,7 @@ func push(n Notification) (err error) {
 
 	for _, a := range n.ButtonActions {
 		buttons = append(buttons, shout.Button{
-			Action: a.AppPayload, // unsure about this [#nocommit]
+			Action: a.AppPayload,
 			Label:  a.LabelText,
 		})
 	}
