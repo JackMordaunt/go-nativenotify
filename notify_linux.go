@@ -22,10 +22,6 @@ func setup(cfg Config) error {
 		cfg.Linux.AppName,
 		cfg.Linux.AppIcon,
 		func(id, action string, platformData map[string]dbus.Variant, target, response dbus.Variant, err error) {
-			fn, ok := callbacksTake(&callbacks, id)
-			if !ok || fn == nil {
-				return
-			}
 			data := make(map[string]string)
 
 			data["action"] = action
@@ -34,6 +30,11 @@ func setup(cfg Config) error {
 
 			for k, v := range platformData {
 				data[k] = v.String()
+			}
+
+			fn, ok := callbacksTake(&callbacks, id)
+			if !ok || fn == nil {
+				return
 			}
 
 			fn(err, id, data)
@@ -87,7 +88,7 @@ func push(n Notification) (err error) {
 			userData = make(map[string]string)
 		}
 		userData["payload"] = n.AppPayload
-		n.Callback(err, id, userData)
+		n.Callback(err, n.ID, userData)
 	})
 
 	return nil
