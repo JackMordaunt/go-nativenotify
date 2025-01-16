@@ -28,6 +28,8 @@ type Callback func(err error, id string, userData map[string]string)
 
 // Notification describes the notification.
 type Notification struct {
+	ID string
+
 	// Title text of the notification.
 	Title string
 
