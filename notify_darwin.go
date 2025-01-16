@@ -13,17 +13,22 @@ func setup(cfg Config) error {
 
 	darwinnotify.SetCallback(func(args darwinnotify.CallbackArgs) {
 		// Extract the callback id that is prepended to the action id.
-		id, actionName, _ := strings.Cut(args.Action, "-")
+		parts := strings.Split(args.Action, "-")
 
-		fn, ok := callbacksTake(&callbacks, id)
-		if !ok || fn == nil {
-			return
-		}
+		id, _ := take(&parts)
+
+		actionIDEncoded, _ := take(&parts)
+		actionArgsEncoded, _ := take(&parts)
+
+		actionID := decode(actionIDEncoded)
+		actionArgs := decode(actionArgsEncoded)
 
 		data := map[string]string{}
 
 		if args.UserText != "" {
-			data[actionName] = args.UserText
+			data[actionID] = args.UserText
+		} else if actionArgs != "" {
+			data[actionID] = actionArgs
 		}
 
 		// Map the user data map to the key-value slice style.
@@ -31,10 +36,12 @@ func setup(cfg Config) error {
 			data[k] = v
 		}
 
-		data["category"] = args.Category
-		data["action"] = args.Action
+		fn, ok := callbacksTake(&callbacks, id)
+		if !ok || fn == nil {
+			return
+		}
 
-		fn(args.Err, id, data)
+		fn(args.Err, actionID, data)
 	})
 
 	return nil
@@ -49,19 +56,18 @@ func push(n Notification) (err error) {
 		userData = make(darwinnotify.UserData)
 	)
 
+	userData["payload"] = n.AppPayload
+
 	for _, button := range n.ButtonActions {
 		buttons = append(buttons, darwinnotify.Action{
-			ID:    fmt.Sprintf("%d-%s", id, button.ID),
+			ID:    fmt.Sprintf("%d-%s", id, encode(button.ID), encode(button.AppPayload)),
 			Title: button.LabelText,
 		})
-		if button.AppPayload != "" {
-			userData[button.ID] = button.AppPayload
-		}
 	}
 
 	for _, input := range n.TextActions {
 		inputs = append(inputs, darwinnotify.TextInputAction{
-			ID:          fmt.Sprintf("%d-%s", id, input.ID),
+			ID:          fmt.Sprintf("%d-%s", id, encode(input.ID)),
 			Title:       input.Title,
 			Placeholder: input.PlaceholderHint,
 			ButtonTitle: input.ButtonLabel,
@@ -77,13 +83,7 @@ func push(n Notification) (err error) {
 		UserData:         userData,
 	})
 
-	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, userData map[string]string) {
-		if userData == nil {
-			userData = make(map[string]string)
-		}
-		userData["payload"] = n.AppPayload
-		n.Callback(err, id, userData)
-	})
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
 
 	return nil
 }
