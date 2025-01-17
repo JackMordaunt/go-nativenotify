@@ -9,10 +9,12 @@ import (
 	"runtime"
 	"time"
 
+	"gioui.org/app"
 	"git.sr.ht/~jackmordaunt/go-nativenotify"
 )
 
 func main() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
 	var (
@@ -85,10 +87,13 @@ func main() {
 }
 
 func wait() {
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		// Avoid the deadlock panic on Windows.
 		<-time.NewTimer(1<<63 - 1).C
-	} else {
+	case "darwin":
+		app.Main()
+	default:
 		select {}
 	}
 }
