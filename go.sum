@@ -1,7 +1,7 @@
 git.sr.ht/~jackmordaunt/go-notify-darwin v0.0.0-20250116010207-33951df68cd5 h1:5QPfJV6WvB2jNezkk7U7JCgX4pq6Clv0Vt507xkiCGI=
 git.sr.ht/~jackmordaunt/go-notify-darwin v0.0.0-20250116010207-33951df68cd5/go.mod h1:uwWDXYGwP2PodSVTd9KU11/P7SoDAA321SmG3IQhoSY=
-git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.1 h1:VPS/EEtIAgkxvYubqBUzkQqkB1Uf80twg8SthWX0VhA=
-git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.1/go.mod h1:QtOLZGz8olr4qH2vWK0QH0w0O4T9fEIjMuWpKUsH7nc=
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.2 h1:M3TQmLqFOqH03aGbUNYffNQORTUw9S7AcY0oQU+0OQk=
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.2/go.mod h1:QtOLZGz8olr4qH2vWK0QH0w0O4T9fEIjMuWpKUsH7nc=
 git.sr.ht/~whereswaldon/shout v0.0.0-20241212204820-26acea6b0007 h1:5xMwYHPm3ym1ccRmVmUEj4hiESj5uqXMYPwG+1Ruf28=
 git.sr.ht/~whereswaldon/shout v0.0.0-20241212204820-26acea6b0007/go.mod h1:VJjhIIJD+YFIyJSH6nCDqoo9ikvAEaD63tUo4uI86pA=
 github.com/go-ole/go-ole v1.3.0 h1:Dt6ye7+vXGIKZ7Xtk4s6/xVdGDQynvom7xCFEdWr6uE=
