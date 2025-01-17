@@ -8,14 +8,15 @@ import (
 	darwinnotify "git.sr.ht/~jackmordaunt/go-notify-darwin"
 )
 
+const defaultAction = "com.apple.UNNotificationDefaultActionIdentifier"
+
 func setup(cfg Config) error {
 	darwinnotify.Init(cfg.Darwin.Categories...)
 
 	darwinnotify.SetCallback(func(args darwinnotify.CallbackArgs) {
-		// Extract the callback id that is prepended to the action id.
-		parts := strings.Split(args.Action, "-")
+		id := args.UserData["id"]
 
-		id, _ := take(&parts)
+		parts := strings.Split(args.Action, "-")
 
 		actionIDEncoded, _ := take(&parts)
 		actionArgsEncoded, _ := take(&parts)
@@ -33,6 +34,9 @@ func setup(cfg Config) error {
 
 		// Map the user data map to the key-value slice style.
 		for k, v := range args.UserData {
+			if k == "id" {
+				continue
+			}
 			data[k] = v
 		}
 
@@ -57,10 +61,11 @@ func push(n Notification) (err error) {
 	)
 
 	userData["default"] = n.AppPayload
+	userData["id"] = strconv.FormatInt(id, 10)
 
 	for _, button := range n.ButtonActions {
 		buttons = append(buttons, darwinnotify.Action{
-			ID:    fmt.Sprintf("%d-%s-%s", id, encode(button.ID), encode(button.AppPayload)),
+			ID:    fmt.Sprintf("%s-%s", encode(button.ID), encode(button.AppPayload)),
 			Title: button.LabelText,
 		})
 	}
@@ -89,7 +94,9 @@ func push(n Notification) (err error) {
 		UserData:         userData,
 	})
 
-	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, data map[string]string) {
+		n.Callback(err, n.ID, data)
+	})
 
 	return nil
 }
