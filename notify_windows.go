@@ -86,6 +86,15 @@ func push(n Notification) (err error) {
 		Inputs:              inputs,
 	}
 
+	switch n.Windows {
+	case WindowsOptionIconCircleCrop:
+		tn.IconCrop = windowsnotify.CropStyleCircle
+	case WindowsOptionIconSquareCrop:
+		tn.IconCrop = windowsnotify.CropStyleSquare
+	case WindowsOptionIconHero:
+		tn.HeroIcon, tn.Icon = tn.Icon, ""
+	}
+
 	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
 
 	return tn.Push()

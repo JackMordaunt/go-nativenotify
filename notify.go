@@ -48,7 +48,18 @@ type Notification struct {
 
 	// ButtonActions are for getting button input from the user.
 	ButtonActions []ButtonAction
+
+	// Windows defines windows specific options.
+	Windows WindowsOption
 }
+
+type WindowsOption int
+
+const (
+	WindowsOptionIconSquareCrop WindowsOption = iota
+	WindowsOptionIconCircleCrop
+	WindowsOptionIconHero
+)
 
 // TextAction describes a text input.
 // It might have an associated button.
