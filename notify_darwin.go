@@ -74,10 +74,16 @@ func push(n Notification) (err error) {
 		})
 	}
 
+	var attachments []string
+
+	if n.Icon != "" {
+		attachments = []string{n.Icon}
+	}
+
 	darwinnotify.Notify(darwinnotify.Notification{
 		Title:            n.Title,
 		Body:             n.Body,
-		Attachments:      []string{n.Icon},
+		Attachments:      attachments,
 		Actions:          buttons,
 		TextInputActions: inputs,
 		UserData:         userData,
