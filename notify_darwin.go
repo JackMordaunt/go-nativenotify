@@ -24,20 +24,8 @@ func setup(cfg Config) error {
 		actionID := decode(actionIDEncoded)
 		actionArgs := decode(actionArgsEncoded)
 
-		data := map[string]string{}
-
 		if args.UserText != "" {
-			data[actionID] = args.UserText
-		} else if actionArgs != "" {
-			data[actionID] = actionArgs
-		}
-
-		// Map the user data map to the key-value slice style.
-		for k, v := range args.UserData {
-			if k == "id" {
-				continue
-			}
-			data[k] = v
+			actionArgs = args.UserText
 		}
 
 		fn, ok := callbacksTake(&callbacks, id)
@@ -45,7 +33,7 @@ func setup(cfg Config) error {
 			return
 		}
 
-		fn(args.Err, actionID, data)
+		fn(actionID, actionArgs)
 	})
 
 	return nil
@@ -60,12 +48,11 @@ func push(n Notification) (err error) {
 		userData = make(darwinnotify.UserData)
 	)
 
-	userData["default"] = n.AppPayload
 	userData["id"] = strconv.FormatInt(id, 10)
 
 	for _, button := range n.ButtonActions {
 		buttons = append(buttons, darwinnotify.Action{
-			ID:    fmt.Sprintf("%s-%s", encode(button.ID), encode(button.AppPayload)),
+			ID:    fmt.Sprintf("%s-%s", encode(button.ID), encode(button.Value)),
 			Title: button.LabelText,
 		})
 	}
@@ -94,9 +81,7 @@ func push(n Notification) (err error) {
 		UserData:         userData,
 	})
 
-	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, data map[string]string) {
-		n.Callback(err, n.ID, data)
-	})
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
 
 	return nil
 }

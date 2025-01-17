@@ -23,25 +23,12 @@ import (
 )
 
 // Callback is executed when the user interacts with a given notification.
-//
-// [id] names the parent notification that was activated.
-//
-// [data] contains user input data. Either the text input, the button payload
-// or the parent notification payload. Data should be inspected to understand
-// what part of the notification was activated.
-type Callback func(err error, id string, data map[string]string)
+// [action] is the activated action.
+// [value] is any associated value for that action.
+type Callback func(action, value string)
 
 // Notification describes the notification.
 type Notification struct {
-	// ID names this notification. This value will appear as the first string argument
-	// to the callback.
-	ID string
-
-	// AppPayload is passed to the callback upon activation under the key "default".
-	// No matter what part of the notification was activated, this payload will always
-	// be provided to the callback.
-	AppPayload string
-
 	// Callback is called upon activation.
 	Callback Callback
 
@@ -85,8 +72,8 @@ type TextAction struct {
 type ButtonAction struct {
 	// ID names the action. The [AppPayload] will appear in the user data keyed by this ID.
 	ID string
-	// AppPayload is provided to the callback if this action is activated.
-	AppPayload string
+	// Value is provided to the callback if this action is activated.
+	Value string
 	// LabelText describes the text content of this button action.
 	LabelText string
 }
@@ -117,9 +104,6 @@ func Setup(cfg Config) error {
 
 // Push a notification to the operating system.
 func Push(n Notification) error {
-	if n.ID == "" {
-		return fmt.Errorf("notification requires ID")
-	}
 	for ii, a := range n.ButtonActions {
 		if a.ID == "" {
 			return fmt.Errorf("buttonaction %d requires ID", ii)

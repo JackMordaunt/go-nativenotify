@@ -22,26 +22,11 @@ func setup(cfg Config) error {
 		cfg.Linux.AppName,
 		cfg.Linux.AppIcon,
 		func(id, action string, platformData map[string]dbus.Variant, target, response dbus.Variant, err error) {
-			data := make(map[string]string)
-
-			data[action] = target.String()
-
-			if r := response.String(); r != "" {
-				data["response"] = r
-			}
-
-			for k, v := range platformData {
-				if s := v.String(); s != "" {
-					data[k] = s
-				}
-			}
-
 			fn, ok := callbacksTake(&callbacks, id)
 			if !ok || fn == nil {
 				return
 			}
-
-			fn(err, id, data)
+			fn(action, target.String())
 		},
 	)
 	if err != nil {
@@ -68,7 +53,7 @@ func push(n Notification) (err error) {
 		buttons = append(buttons, shout.Button{
 			Action: a.ID,
 			Label:  a.LabelText,
-			Target: a.AppPayload,
+			Target: a.Value,
 		})
 	}
 
@@ -79,22 +64,16 @@ func push(n Notification) (err error) {
 		Markup:              false,
 		IconPath:            n.Icon,
 		Priority:            shout.Normal,
-		DefaultAction:       n.ID,
+		DefaultAction:       "default",
 		DefaultActionLabel:  "",
-		DefaultActionTarget: dbus.MakeVariant(n.AppPayload),
+		DefaultActionTarget: dbus.Variant{},
 		Buttons:             buttons,
 		ExpirationTimeout:   0,
 	}); err != nil {
 		return fmt.Errorf("sending notification: %w", err)
 	}
 
-	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, id string, userData map[string]string) {
-		if userData == nil {
-			userData = make(map[string]string)
-		}
-		userData["default"] = n.AppPayload
-		n.Callback(err, n.ID, userData)
-	})
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
 
 	return nil
 }

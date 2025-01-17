@@ -21,16 +21,12 @@ func setup(cfg Config) error {
 		actionID := decode(actionIDEncoded)
 		actionArgs := decode(actionArgsEncoded)
 
-		data := make(map[string]string)
-
+		// If the action was a text input, or a selection, grab the value for it.
+		// If the action was a button, the actionArgs will contain the value.
 		for _, ud := range userdata {
-			if ud.Value != "" {
-				data[ud.Key] = ud.Value
+			if ud.Key == actionID {
+				actionArgs = ud.Value
 			}
-		}
-
-		if actionID != "" {
-			data[actionID] = actionArgs
 		}
 
 		fn, ok := callbacksTake(&callbacks, id)
@@ -38,7 +34,7 @@ func setup(cfg Config) error {
 			return
 		}
 
-		fn(nil, args, data)
+		fn(actionID, actionArgs)
 	})
 	return nil
 }
@@ -61,7 +57,7 @@ func push(n Notification) (err error) {
 	for _, a := range n.ButtonActions {
 		actions = append(actions, windowsnotify.Action{
 			Content:   a.LabelText,
-			Arguments: fmt.Sprintf("%d-%s-%s", id, encode(a.ID), encode(a.AppPayload)),
+			Arguments: fmt.Sprintf("%d-%s-%s", id, encode(a.ID), encode(a.Value)),
 		})
 	}
 
@@ -85,19 +81,12 @@ func push(n Notification) (err error) {
 		Body:                n.Body,
 		Icon:                n.Icon,
 		ActivationType:      windowsnotify.Foreground,
-		ActivationArguments: fmt.Sprintf("%d-%s", id, encode(n.ID)),
+		ActivationArguments: strconv.FormatInt(id, 10),
 		Actions:             actions,
 		Inputs:              inputs,
 	}
 
-	// This closure ensures that the outer notification ID and payload is always passed to the callback.
-	// The action data will appear in [userData].
-	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, args string, userData map[string]string) {
-		if n.AppPayload != "" {
-			userData["default"] = n.AppPayload
-		}
-		n.Callback(err, n.ID, userData)
-	})
+	callbacksPut(&callbacks, strconv.FormatInt(id, 10), n.Callback)
 
 	return tn.Push()
 }

@@ -26,7 +26,7 @@ func main() {
 
 	flag.StringVar(&title, "title", "title", "title text of notification")
 	flag.StringVar(&body, "body", "body", "body text of notification")
-	flag.StringVar(&icon, "icon", "./cmd/notify/puzzle.png", "path to icon file for notification")
+	flag.StringVar(&icon, "icon", "./puzzle.png", "path to icon file for notification")
 	flag.StringVar(&payload, "payload", "example-payload", "data to be returned upon activation")
 	flag.Parse()
 
@@ -52,11 +52,9 @@ func main() {
 	}
 
 	if err := nativenotify.Push(nativenotify.Notification{
-		ID:         "text-message",
-		Title:      title,
-		Body:       body,
-		Icon:       icon,
-		AppPayload: payload,
+		Title: title,
+		Body:  body,
+		Icon:  icon,
 		TextActions: []nativenotify.TextAction{
 			{
 				ID:              "reply",
@@ -67,16 +65,13 @@ func main() {
 		},
 		ButtonActions: []nativenotify.ButtonAction{
 			{
-				ID:         "like",
-				LabelText:  "Like",
-				AppPayload: "@jack",
+				ID:        "like",
+				LabelText: "Like",
+				Value:     "@jack",
 			},
 		},
-		Callback: func(err error, id string, userData map[string]string) {
-			slog.Info("callback", "id", id, "userData", userData)
-			if err != nil {
-				slog.Error("callback error", "err", err)
-			}
+		Callback: func(action, value string) {
+			slog.Info("callback", "action", action, "value", value)
 		},
 	}); err != nil {
 		slog.Error("pushing notification", "err", err)
