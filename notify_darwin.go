@@ -24,6 +24,10 @@ func setup(cfg Config) error {
 		actionID := decode(actionIDEncoded)
 		actionArgs := decode(actionArgsEncoded)
 
+		if args.Action == defaultAction {
+			actionID = "default"
+		}
+
 		if args.UserText != "" {
 			actionArgs = args.UserText
 		}
@@ -59,7 +63,7 @@ func push(n Notification) (err error) {
 
 	for _, input := range n.TextActions {
 		inputs = append(inputs, darwinnotify.TextInputAction{
-			ID:          fmt.Sprintf("%d-%s", id, encode(input.ID)),
+			ID:          encode(input.ID),
 			Title:       input.Title,
 			Placeholder: input.PlaceholderHint,
 			ButtonTitle: input.ButtonLabel,
