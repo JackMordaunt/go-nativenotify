@@ -71,7 +71,7 @@ func push(n Notification) (err error) {
 			actions = append(actions, windowsnotify.Action{
 				InputID:   a.ID,
 				Content:   a.ButtonLabel,
-				Arguments: fmt.Sprintf("%d", id),
+				Arguments: fmt.Sprintf("%d-%s", id, encode(a.ID)),
 			})
 		}
 	}
