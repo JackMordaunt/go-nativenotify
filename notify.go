@@ -16,6 +16,8 @@
 package nativenotify
 
 import (
+	"fmt"
+
 	darwinnotify "git.sr.ht/~jackmordaunt/go-notify-darwin"
 	windowsnotify "git.sr.ht/~jackmordaunt/go-toast/v2"
 )
@@ -115,5 +117,18 @@ func Setup(cfg Config) error {
 
 // Push a notification to the operating system.
 func Push(n Notification) error {
+	if n.ID == "" {
+		return fmt.Errorf("notification requires ID")
+	}
+	for ii, a := range n.ButtonActions {
+		if a.ID == "" {
+			return fmt.Errorf("buttonaction %d requires ID", ii)
+		}
+	}
+	for ii, a := range n.TextActions {
+		if a.ID == "" {
+			return fmt.Errorf("text action %d requires ID", ii)
+		}
+	}
 	return push(n)
 }
