@@ -11,7 +11,7 @@ If you need more power on a given platform, use the platform specific modules di
 
 ## Caveats
 
-MacOS programs need to be bundled and codesigned for notifications to be allowed. 
+MacOS programs need to have a GUI (NSApplication), be bundled into an app, and codesigned for notifications to be allowed.
 
 Linux programs will get access to a better platform API if sandboxed, such as in a Flatpak.
 
