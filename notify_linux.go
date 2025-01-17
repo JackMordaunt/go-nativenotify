@@ -24,12 +24,16 @@ func setup(cfg Config) error {
 		func(id, action string, platformData map[string]dbus.Variant, target, response dbus.Variant, err error) {
 			data := make(map[string]string)
 
-			data["action"] = action
-			data["target"] = target.String()
-			data["response"] = response.String()
+			data[action] = target.String()
+
+			if r := response.String(); r != "" {
+				data["response"] = r
+			}
 
 			for k, v := range platformData {
-				data[k] = v.String()
+				if s := v.String(); s != "" {
+					data[k] = s
+				}
 			}
 
 			fn, ok := callbacksTake(&callbacks, id)
@@ -62,8 +66,9 @@ func push(n Notification) (err error) {
 
 	for _, a := range n.ButtonActions {
 		buttons = append(buttons, shout.Button{
-			Action: a.AppPayload,
+			Action: a.ID,
 			Label:  a.LabelText,
+			Target: a.AppPayload,
 		})
 	}
 
@@ -74,9 +79,9 @@ func push(n Notification) (err error) {
 		Markup:              false,
 		IconPath:            n.Icon,
 		Priority:            shout.Normal,
-		DefaultAction:       "default",
+		DefaultAction:       n.ID,
 		DefaultActionLabel:  "",
-		DefaultActionTarget: dbus.Variant{},
+		DefaultActionTarget: dbus.MakeVariant(n.AppPayload),
 		Buttons:             buttons,
 		ExpirationTimeout:   0,
 	}); err != nil {
@@ -87,7 +92,7 @@ func push(n Notification) (err error) {
 		if userData == nil {
 			userData = make(map[string]string)
 		}
-		userData["payload"] = n.AppPayload
+		userData["default"] = n.AppPayload
 		n.Callback(err, n.ID, userData)
 	})
 

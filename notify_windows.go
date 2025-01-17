@@ -94,7 +94,7 @@ func push(n Notification) (err error) {
 	// The action data will appear in [userData].
 	callbacksPut(&callbacks, strconv.FormatInt(id, 10), func(err error, args string, userData map[string]string) {
 		if n.AppPayload != "" {
-			userData["payload"] = n.AppPayload
+			userData["default"] = n.AppPayload
 		}
 		n.Callback(err, n.ID, userData)
 	})

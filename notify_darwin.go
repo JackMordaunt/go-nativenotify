@@ -56,7 +56,7 @@ func push(n Notification) (err error) {
 		userData = make(darwinnotify.UserData)
 	)
 
-	userData["payload"] = n.AppPayload
+	userData["default"] = n.AppPayload
 
 	for _, button := range n.ButtonActions {
 		buttons = append(buttons, darwinnotify.Action{
