@@ -60,7 +60,7 @@ func push(n Notification) (err error) {
 
 	for _, button := range n.ButtonActions {
 		buttons = append(buttons, darwinnotify.Action{
-			ID:    fmt.Sprintf("%d-%s", id, encode(button.ID), encode(button.AppPayload)),
+			ID:    fmt.Sprintf("%d-%s-%s", id, encode(button.ID), encode(button.AppPayload)),
 			Title: button.LabelText,
 		})
 	}
